@@ -1,4 +1,4 @@
-# AspCoreRnd
+# How to close your code
 
 As a developer, you should know SOLID principles.
 
@@ -146,44 +146,89 @@ Basic strategy pattern implementation explained here. http://www.dofactory.com/n
 
 
 
+
+
+
+
+The basic concept of pattern defines an Interface with strategy and have the concrete classes with different strategies implementation. Based on your need you can create an object of particular strategy dynamically.  google it for "strategy design pattern" and you will get plenty of examples.
+
+
+
+Here I wanted to show an example using dependency framework. In above-given URL of dofactory example of strategy pattern, has context class to create an object of different strategies. We can rely on dependency injection framework for that responsibility. 
+
+
+
 We can do it better way using dependency injection framework.   Nowadays everybody uses it as the so-called best practices.
 
 
 
+In the following code,  IExampleStrategy is an interface and has functionexample(). This interface implemented in three different ExampleStrategy classes. each class has different implementation of functionexample. 
 
 
 
- public interface IExampleFunction
+
+   public interface IExampleStrategy
+
     {
+
         void functionexample();
+
     }
 
 
-    public class ExampleFuction1 : IExampleFunction
+
+
+
+    public class ExampleStrategy1 : IExampleStrategy
+
     {
+
         public void functionexample()
+
         {
-            Console.WriteLine("ExampleFuction1.functionexample()  executed.");
+
+            Console.WriteLine("ExampleStrategy1.functionexample()  executed.");
+
         }
 
+
+
     }
 
-    public class ExampleFuction2 : IExampleFunction
+
+
+    public class ExampleStrategy2 : IExampleStrategy
+
     {
+
         public void functionexample()
+
         {
-            Console.WriteLine("ExampleFuction2.functionexample()  executed.");
+
+            Console.WriteLine("ExampleStrategy2.functionexample()  executed.");
+
         }
 
+
+
     }
 
-    public class ExampleFuction3 : IExampleFunction
+
+
+    public class ExampleStrategy3 : IExampleStrategy
+
     {
+
         public void functionexample()
+
         {
-            Console.WriteLine("ExampleFuction3.functionexample()  executed.");
+
+            Console.WriteLine("ExampleStrategy3.functionexample()  executed.");
+
         }
 
+
+
     }
 
 
@@ -192,37 +237,67 @@ We can do it better way using dependency injection framework.   Nowadays everybo
 
 
 
-Example work function.
+Following is the context class where we instantiate the class based on strategy.  In the following class, we have injected IUnityContainer. It resolves right Strategy class based on a parameter. 
+
+The Work function is the function that we are changing to our main problem of removing switch cases. The first Work function can pass parameter and decide what strategy need to execute. The container can get a right concrete class based on a parameter passed. Instantiating an object is a responsibility of container based on a parameter. 
 
 
 
+Another Work function also does the same thing but in some cases, the developer has to do things in a loop. The container can take care of creating an object and also can take care of lifetime of your object. So in case if you have to create the same object multiple times for our second work function then a container can reuse the same object created previously. 
 
-   public class CloseCodeExample2
+
+  public class CloseCodeExample2
+
     {
+
         private readonly IUnityContainer _container;
 
+
+
         public CloseCodeExample2(IUnityContainer container)
+
         {
+
             _container = container;
+
         }
+
+
 
         public void Work(string switchcall)
+
         {
-            var examplefunction= _container.Resolve<IExampleFunction>(switchcall);
+
+            var examplefunction= _container.Resolve<IExampleStrategy>(switchcall);
+
+
 
             examplefunction.functionexample();
+
         }
+
+
 
         public void Work(List<string> switchcalls)
+
         {
+
             foreach (var item in switchcalls)
+
             {
-                var examplefunction = _container.Resolve<IExampleFunction>(item);
+
+                var examplefunction = _container.Resolve<IExampleStrategy>(item);
+
+
 
                 examplefunction.functionexample();
+
             }
-          
+
+            
+
         }
+
     }
 
 
@@ -233,37 +308,86 @@ Example work function.
 
 
 
+Here is our Main function where we have defined our Unity container registration for interface and its implementation. 
 
 
 
+   class Program
 
-  class Program
     {
-        static void Main(string[] args)
-        {
-   
-            
 
-            //Container registration
+        static void Main(string[] args)
+
+        {
+
+            CloseCodeExample codeExample = new CloseCodeExample();
+
+
+
+            codeExample.Work("Fun1");
+
+
+
+            codeExample.Work2("Fun2");
+
+            codeExample.Work2("Fun3");
+
+
+
+            //Unity container registration.
 
             var container = new UnityContainer();
 
-            container.RegisterType<IExampleFunction, ExampleFuction1>("Fun1");
-            container.RegisterType<IExampleFunction, ExampleFuction2>("Fun2");
-            container.RegisterType<IExampleFunction, ExampleFuction3>("Fun3");
+
+
+            container.RegisterType<IExampleStrategy, ExampleStrategy1>("Fun1");
+
+            container.RegisterType<IExampleStrategy, ExampleStrategy2>("Fun2");
+
+            container.RegisterType<IExampleStrategy, ExampleStrategy3>("Fun3");
+
+
+
+
 
             CloseCodeExample2 codeExample2 = new CloseCodeExample2(container);
-                       
 
+                        
 
             codeExample2.Work("Fun1");
+
             codeExample2.Work("Fun2");
+
+
 
             Console.WriteLine("---------------------------------");
 
+
+
             codeExample2.Work(new List<string>() { "Fun2", "Fun3", "Fun1" });
+
+
 
             Console.ReadKey();
 
+
+
         }
+
     }
+
+
+
+
+
+
+
+Let's validate our two SOLID principles that we wanted to implement.  In above code, If you want to add new case then you need to add another class which implements the same interface and just need to register for the container.  We don't need to change function "Work"  It is basically closed for modification. Also, by creating separate class for each cases, We implemented single responsibility priciple. 
+
+
+
+I hope you like it. If you have any query, add it to comments.
+
+
+
+You can find code sample of above code here at github. https://github.com/atulpatel/AspCoreRnd
